@@ -74,7 +74,7 @@ class FromFileToGCS:
             new_bucket = self.storage_client.create_bucket(bucket, location="europe-west1")
             print('A new bucket created at {}'.format(new_bucket.name))
 
-    def download_and_upload(self, url, destination_blob_name):
+    def download_and_upload_from_URL(self, url, destination_blob_name):
         """
         Downloads data from a URL and uploads it to GCS.
 
@@ -166,6 +166,15 @@ class FromFileToGCS:
                     data = pd.read_csv(f)
                     file_name_clean = self.destination_blob_name.replace(".gz", "")
                     destination_blob_name = f'raw_csv/{file_name_clean}.csv'
+                    csv_data = data.to_csv(index=False)
+                    blob_output = bucket.blob(destination_blob_name)
+                    blob_output.upload_from_string(csv_data, content_type='text/csv')
+                    print(f'{self.destination_blob_name_raw} is uncompressed and uploaded to {destination_blob_name}')
+
+            elif self.destination_blob_name.endswith('.csv'):
+                with io.BytesIO(zip_data) as f:
+                    data = pd.read_csv(f)
+                    destination_blob_name = f'raw_csv/destination_blob_name'
                     csv_data = data.to_csv(index=False)
                     blob_output = bucket.blob(destination_blob_name)
                     blob_output.upload_from_string(csv_data, content_type='text/csv')
